@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<policy>
+	<and>
+		<or>
+			<attribute>a</attribute>
+			<attribute>b</attribute>
+		</or>
+		<attribute>c</attribute>
+		<attribute>d</attribute>
+	</and>
+</policy>
