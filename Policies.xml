@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <policy>
 	<and>
-		<or>
-			<attribute>a</attribute>
-			<attribute>b</attribute>
-		</or>
-		<attribute>c</attribute>
-		<attribute>d</attribute>
+		<att>utilisateurs.active</att>
+		<att>smartlock.state</att>
+		
 	</and>
+	or
+	    <att>utilisateurs.active</att>
+		<att>camera.state</att>
+	or
 </policy>

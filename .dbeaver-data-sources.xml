@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data-sources>
+	<data-source id="sqlite_jdbc-16bdd47b969-7530bd2d33fd14a5" provider="generic" driver="sqlite_jdbc" name="SQLite - sample.db" save-password="true" read-only="false">
+		<connection server="" database="C:\Users\couab\eclipse-workspace\AbacModul\sample.db" url="jdbc:sqlite:C:\Users\couab\eclipse-workspace\AbacModul\sample.db" type="dev"/>
+	</data-source>
+	<data-source id="sqlite_jdbc-16bdd49828f-6b53d5eff241d316" provider="generic" driver="sqlite_jdbc" name="SQLite - sample.db 2" save-password="true" read-only="false">
+		<connection server="" database="C:\Users\couab\eclipse-workspace\AbacModul\sample.db" url="jdbc:sqlite:C:\Users\couab\eclipse-workspace\AbacModul\sample.db" type="dev"/>
+	</data-source>
+	<filters/>
+</data-sources>
