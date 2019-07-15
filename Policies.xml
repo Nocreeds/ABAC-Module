@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <policy>
-	<and>
-		<att>utilisateurs.active</att>
-		<att>smartlock.state</att>
-		
-	</and>
-	or
-	    <att>utilisateurs.active</att>
-		<att>camera.state</att>
-	or
+	<or>
+		<and>
+			<equal>
+				<att>utilisateurs.role</att>
+				<val>doctor</val>
+			</equal>		
+		</and>
+	    <and>
+	    	<supequal>
+	    		<att>system.alert.1</att>
+	    		<val>4</val>
+	    	</supequal>
+	    </and>
+	</or>
 </policy>

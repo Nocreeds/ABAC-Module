@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -56,8 +57,12 @@ public class Core {
 				Class.forName("org.sqlite.JDBC");
 				Connection connection = null;
 				connection = DriverManager.getConnection("jdbc:sqlite:HomeSecurityDB.db");
+				System.out.println("Opened database successfully");
 				Statement statement = connection.createStatement();
-				
+				ResultSet res = statement.executeQuery("SELECT name FROM utilisateurs");
+				String s = "a.vgf.lkij.oiu";
+				String ss[] = s.split("\\.");
+				System.out.println(ss[1]+" "+ss[2]+" "+ss[3]+" "+ss[0]);
 //				statement.executeUpdate("DROP TABLE IF EXISTS person");
 //		        statement.executeUpdate("CREATE TABLE person (id INTEGER, name STRING)");
 //				
@@ -90,38 +95,9 @@ public class Core {
 			
 					
 			/////////////////////////////////////////////////////////////////////
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			try {
-				DocumentBuilder builder = factory.newDocumentBuilder();
-				Document doc = builder.parse(new File("Policies.xml"));
+			
 				
-				System.out.println("*************PROLOGUE************");
-				System.out.println("version : " + doc.getXmlVersion());
-				System.out.println("encodage : " + doc.getXmlEncoding());		
-			    System.out.println("standalone : " + doc.getXmlStandalone());
-			    
-			    NodeList nodes = doc.getDocumentElement().getChildNodes();
-			    
-			    System.out.println("\n*************RACINE************");
-				System.out.println(doc.getDocumentElement().getNodeName());
-				System.out.println(nodes.getLength());
-				
-				for(int k=0;k<nodes.getLength();k++){
-		             policyCalculator(nodes.item(k),0);
-		         }
-				
-			} catch (ParserConfigurationException e) {
-				e.printStackTrace();
-			} catch (SAXException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			
 		}
 
 }

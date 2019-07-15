@@ -7,6 +7,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -17,30 +19,35 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.sun.javafx.image.impl.ByteIndexed.Getter;
-
 public class Test {
 	
-	public static String getTable(String att) {
-		return att.substring(0, att.indexOf("."));
+	public static Map<String, String> getTable(String att) throws Exception {
+		String [] res = att.split("\\.");
+		Map<String, String> m = new HashMap<String, String>();
+		if(res.length >= 2 && res.length <= 3) {
+			m.put("class", res[0]);
+			m.put("column", res[1]);
+			if(res.length == 3)m.put("line", res[2]);
+			return m;
+		}else throw new Exception("invalid policy: invalide attribute \""+att+"\"");
 	}
-	
+		
 	//Recursively loop through and print out all the xml child tags in the document
-	public static Boolean policyCalculator(Node node, Connection BD) throws Exception{
+	public static Boolean policyCalculator(Node node, Connection BD, String IDUser, String IDObject) throws Exception{
 	       if(node.getNodeType() == Node.ELEMENT_NODE){
 	    	   if(node.getNodeName().equals("and")) {
 		           NodeList nl=node.getChildNodes();
 		           Boolean fRes = true;
 		           int j;
 		           for(j=0;j<nl.getLength();j++) {
-		        	   Boolean res = policyCalculator(nl.item(j), BD);
+		        	   Boolean res = policyCalculator(nl.item(j), BD, IDUser, IDObject);
 		        	   if(res != null) {
 		        		   fRes = fRes && res;
 		        		   System.out.print(" and ");
 		        	   }
 		        	   
 		           }
-		           if(j == 0) throw new Exception("invalid policy");
+		           if(j == 0) throw new Exception("invalid policy: invalide \"and\" statement");
 		           else return fRes;
 
 	    	   }else if(node.getNodeName().equals("or")) {
@@ -48,44 +55,135 @@ public class Test {
 		           Boolean fRes = false;
 		           int j;
 		           for(j=0;j<nl.getLength();j++) {
-		        	   Boolean res = policyCalculator(nl.item(j), BD);
+		        	   Boolean res = policyCalculator(nl.item(j), BD, IDUser, IDObject);
 		        	   if(res != null) {
 		        		   System.out.print(" or ");
 		        		   fRes = fRes || res;
 		        		   
 		        	   }
 		           }
-		           if(j == 0) throw new Exception("invalid policy");
+		           if(j == 0) throw new Exception("invalid policy: invalide \"or\" statement");
 		           else return fRes;
 
 	    	   }else if(node.getNodeName().equals("att")) {
-	    		   String att = node.getTextContent();
-	    		   String classe = getTable(att);
+	    		   Map<String, String> m = getTable(node.getTextContent());
 	    		   Statement statement = BD.createStatement();
-	    		   ResultSet res = statement.executeQuery("SELECT "+att+" FROM "+classe);
+	    		   ResultSet res;
+	    		   if(m.containsKey("line")) {
+	    				res = statement.executeQuery("SELECT "+m.get("column")+" FROM "+m.get("class")+" WHERE ID = "+m.get("line"));
+	    			}else if(m.get("class").equals("utilisateurs")) {
+	    				res = statement.executeQuery("SELECT "+m.get("column")+" FROM "+m.get("class")+" WHERE ID = "+IDUser);
+	    			}else res = statement.executeQuery("SELECT "+m.get("column")+" FROM "+m.get("class")+" WHERE ID = "+IDObject);
 	    		   System.out.print(" "+res.getBoolean(1)+" ");
 	    		   return res.getBoolean(1);
 	    	   }else if(node.getNodeName().equals("equal")) {
-	    		   
+	    		   NodeList nl=node.getChildNodes();
+		           IntOrString [] res = new IntOrString[2];
+		           int j,i=0;
+		           for(j=0;j<nl.getLength();j++) {
+		        	   if(nl.item(j).getNodeType() == Node.ELEMENT_NODE) {
+		        		   System.out.println(nl.item(j).getTextContent());
+		        		   if (i>1) throw new Exception("invalid policy: invalide \"equal\" statement");
+		        		   if(nl.item(j).getNodeName().equals("att")) {
+		        			   res[i] = result(nl.item(j), BD, IDUser, IDObject);
+		        		   }else if(nl.item(j).getNodeName().equals("val")) res[i] = new IntOrString(nl.item(j).getTextContent());
+		        		   else throw new Exception("invalid policy: invalide \""+nl.item(j).getNodeName()+"\" attribute");
+		        		   i++;
+		        	   }
+		           }
+		           if(j == 0 && i == 0) throw new Exception("invalid policy: invalide \"equal\" statement");
+		           System.out.print("("+res[0]+" == "+res[1]+" / "+res[0].equal(res[1])+")");
+		           return res[0].equal(res[1]); 
 	    	   }else if(node.getNodeName().equals("supequal")) {
-	    		   
+	    		   NodeList nl=node.getChildNodes();
+		           IntOrString [] res = new IntOrString[2];
+		           int j,i=0;
+		           for(j=0;j<nl.getLength();j++) {
+		        	   if(nl.item(j).getNodeType() == Node.ELEMENT_NODE) {
+		        		   if (i>1) throw new Exception("invalid policy: invalide \"supequal\" statement");
+		        		   if(nl.item(j).getNodeName().equals("att")) {
+		        			   res[i] = result(nl.item(j), BD, IDUser, IDObject);
+		        		   }else if(nl.item(j).getNodeName().equals("val")) res[i] = new IntOrString(nl.item(j).getTextContent());
+		        		   else throw new Exception("invalid policy: invalide \""+nl.item(j).getNodeName()+"\" attribute");
+		        		   i++;
+		        	   }
+		           }
+		           if(j == 0 && i == 0) throw new Exception("invalid policy: invalide \"supequal\" statement");
+		           System.out.print("("+res[0]+" >= "+res[1]+" / "+res[0].supequal(res[1])+")");
+		           return res[0].supequal(res[1]); 
 	    	   }else if(node.getNodeName().equals("infequal")) {
-	    		   
+	    		   NodeList nl=node.getChildNodes();
+		           IntOrString [] res = new IntOrString[2];
+		           int j,i=0;
+		           for(j=0;j<nl.getLength();j++) {
+		        	   if(nl.item(j).getNodeType() == Node.ELEMENT_NODE) {
+		        		   if (i>1) throw new Exception("invalid policy: invalide \"infequal\" statement");
+		        		   if(nl.item(j).getNodeName().equals("att")) {
+		        			   res[i] = result(nl.item(j), BD, IDUser, IDObject);
+		        		   }else if(nl.item(j).getNodeName().equals("val")) res[i] = new IntOrString(nl.item(j).getTextContent());
+		        		   else throw new Exception("invalid policy: invalide \""+nl.item(j).getNodeName()+"\" attribute");
+		        		   i++;
+		        	   }
+		           }
+		           if(j == 0 && i == 0) throw new Exception("invalid policy: invalide \"infequal\" statement");
+		           System.out.print("("+res[0]+" <= "+res[1]+" / "+res[0].infequal(res[1])+")");
+		           return res[0].infequal(res[1]);
 	    	   }else if(node.getNodeName().equals("sup")) {
-	    		   
+	    		   NodeList nl=node.getChildNodes();
+		           IntOrString [] res = new IntOrString[2];
+		           int j,i=0;
+		           for(j=0;j<nl.getLength();j++) {
+		        	   if(nl.item(j).getNodeType() == Node.ELEMENT_NODE) {
+		        		   if (i>1) throw new Exception("invalid policy: invalide \"sup\" statement");
+		        		   if(nl.item(j).getNodeName().equals("att")) {
+		        			   res[i] = result(nl.item(j), BD, IDUser, IDObject);
+		        		   }else if(nl.item(j).getNodeName().equals("val")) res[i] = new IntOrString(nl.item(j).getTextContent());
+		        		   else throw new Exception("invalid policy: invalide \""+nl.item(j).getNodeName()+"\" attribute");
+		        		   i++;
+		        	   }
+		           }
+		           if(j == 0 && i == 0) throw new Exception("invalid policy: invalide \"sup\" statement");
+		           System.out.print("("+res[0]+" > "+res[1]+" / "+res[0].sup(res[1])+")");
+		           return res[0].sup(res[1]);
 	    	   }else if(node.getNodeName().equals("inf")) {
-	    		   
+	    		   NodeList nl=node.getChildNodes();
+		           IntOrString [] res = new IntOrString[2];
+		           int j,i=0;
+		           for(j=0;j<nl.getLength();j++) {
+		        	   if(nl.item(j).getNodeType() == Node.ELEMENT_NODE) {
+		        		   if (i>1) throw new Exception("invalid policy: invalide \"inf\" statement");
+		        		   if(nl.item(j).getNodeName().equals("att")) {
+		        			   res[i] = result(nl.item(j), BD, IDUser, IDObject);
+		        		   }else if(nl.item(j).getNodeName().equals("val")) res[i] = new IntOrString(nl.item(j).getTextContent());
+		        		   else throw new Exception("invalid policy: invalide \""+nl.item(j).getNodeName()+"\" attribute");
+		        		   i++;
+		        	   }
+		           }
+		           if(j == 0 && i == 0) throw new Exception("invalid policy: invalide \"inf\" statement");
+		           System.out.print("("+res[0]+" < "+res[1]+" / "+res[0].inf(res[1])+")");
+		           return res[0].inf(res[1]);
 	    	   }
 	    	   
-	    	   else throw new Exception("invalid policy");
+	    	   else throw new Exception("invalid policy: invalid element \""+node.getNodeName()+"\"");
 	    	   
 	           //System.out.println(node.getNodeName()+" : "+node.getTextContent()+" j = "+i+" length = "+node.getChildNodes().getLength());
 	       }return null;
 	       
 	}
 	
-	
-	
+	private static IntOrString result(Node node, Connection BD, String IDUser, String IDObject) throws Exception {
+		Map<String, String> m = getTable(node.getTextContent());
+		Statement statement = BD.createStatement();
+		ResultSet res;
+		if(m.containsKey("line")) {
+			res = statement.executeQuery("SELECT "+m.get("column")+" FROM "+m.get("class")+" WHERE ID = "+m.get("line"));
+		}else if(m.get("class").equals("utilisateurs")) {
+			res = statement.executeQuery("SELECT "+m.get("column")+" FROM "+m.get("class")+" WHERE ID = "+IDUser);
+		}else res = statement.executeQuery("SELECT "+m.get("column")+" FROM "+m.get("class")+" WHERE ID = "+IDObject);
+		if(res.getString(1).equals("")) throw new Exception("invalide attribute \""+node.getTextContent()+"\" = \""+res.getString(1)+"\"");
+		return new IntOrString(res.getString(1));
+	}
+
 	public static void main(String[] args) {
 		
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -102,7 +200,7 @@ public class Test {
 			System.out.println(nodes.getLength());
 			
 			for(int k=0;k<nodes.getLength();k++){
-	             System.out.println("==>" + policyCalculator(nodes.item(k),connection));
+	             System.out.println("==>" + policyCalculator(nodes.item(k), connection, "231646", "0"));
 	        }
 	        connection.close();
 	          
