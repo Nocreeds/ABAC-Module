@@ -21,6 +21,16 @@ import org.xml.sax.SAXException;
 
 public class Test {
 	
+	public static String getObjectType(String IDObject) throws Exception {
+		switch (IDObject.substring(0, 2)) {
+		case "24": return "smartlock";
+		case "25": return "firesensor";
+		case "26": return "camera";
+		case "27": return "bloodpressur";
+		default: throw new Exception("invalide Object ID");
+		}
+	}
+	
 	public static Map<String, String> getTable(String att) throws Exception {
 		String [] res = att.split("\\.");
 		Map<String, String> m = new HashMap<String, String>();
@@ -31,8 +41,8 @@ public class Test {
 			return m;
 		}else throw new Exception("invalid policy: invalide attribute \""+att+"\"");
 	}
-		
-	//Recursively loop through and print out all the xml child tags in the document
+	
+	//Recursively loop through and calculate out one policy from the XML file
 	public static Boolean policyCalculator(Node node, Connection BD, String IDUser, String IDObject) throws Exception{
 	       if(node.getNodeType() == Node.ELEMENT_NODE){
 	    	   if(node.getNodeName().equals("and")) {
@@ -169,6 +179,35 @@ public class Test {
 	           //System.out.println(node.getNodeName()+" : "+node.getTextContent()+" j = "+i+" length = "+node.getChildNodes().getLength());
 	       }return null;
 	       
+	}
+	
+	public static Boolean dacCalculator(Connection BD, String IDUser, String IDObject) throws SQLException {
+		Statement statement = BD.createStatement();
+		ResultSet res;
+		res = statement.executeQuery("SELECT "+IDObject+" FROM dac WHERE utilisateurs = "+IDUser);
+		return res.getBoolean(1);
+	}
+	
+	public static Boolean Permission(Node node, Connection BD, String IDUser, String IDObject, String r_w) throws Exception {
+		
+		if(!dacCalculator(BD, IDUser, IDObject)) {
+			return false;
+		}
+		Boolean res;
+		NodeList nodes = node.getChildNodes();
+		for(int i=0;i<nodes.getLength();i++) {
+			if(nodes.item(i).getNodeName().equals(getObjectType(IDObject))) {
+				NodeList nodes1 = nodes.item(i).getChildNodes();
+				for(int j=0;j<nodes1.getLength();j++) {
+					if(nodes1.item(j).getNodeName().equals(r_w)) {
+						res = policyCalculator(nodes.item(i), BD, IDUser, IDObject);
+						if(res != null) return res;
+						return true;
+					}
+				}
+			}
+		}
+		return true;
 	}
 	
 	private static IntOrString result(Node node, Connection BD, String IDUser, String IDObject) throws Exception {
