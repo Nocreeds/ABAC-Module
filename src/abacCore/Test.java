@@ -178,18 +178,17 @@ public class Test {
 	    	   
 	           //System.out.println(node.getNodeName()+" : "+node.getTextContent()+" j = "+i+" length = "+node.getChildNodes().getLength());
 	       }return null;
-	       
 	}
 	
 	public static Boolean dacCalculator(Connection BD, String IDUser, String IDObject) throws SQLException {
 		Statement statement = BD.createStatement();
-		ResultSet res;
-		res = statement.executeQuery("SELECT "+IDObject+" FROM dac WHERE utilisateurs = "+IDUser);
-		return res.getBoolean(1);
+		ResultSet res = statement.executeQuery("SELECT "+IDObject+" FROM dac WHERE utilisateurs = "+IDUser);
+		Boolean boll = res.getBoolean(1);
+		statement.close();
+		return boll;
 	}
 	
 	public static Boolean Permission(Node node, Connection BD, String IDUser, String IDObject, String r_w) throws Exception {
-		
 		if(!dacCalculator(BD, IDUser, IDObject)) {
 			return false;
 		}
@@ -227,9 +226,11 @@ public class Test {
 		
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		try {
+			/*------------------------------BD Connection-----------------------------*/
 			Class.forName("org.sqlite.JDBC");
 			Connection connection = null;
 			connection = DriverManager.getConnection("jdbc:sqlite:HomeSecurityDB.db");
+			/*------------------------------XML Extraction-----------------------------*/
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			Document doc = builder.parse(new File("Policies.xml"));
 		    NodeList nodes = doc.getDocumentElement().getChildNodes();
@@ -238,9 +239,7 @@ public class Test {
 			System.out.println(doc.getDocumentElement().getNodeName());
 			System.out.println(nodes.getLength());
 			
-			for(int k=0;k<nodes.getLength();k++){
-	             System.out.println("==>" + policyCalculator(nodes.item(k), connection, "231646", "0"));
-	        }
+	        System.out.println("==>" + Permission(doc.getDocumentElement(), connection, "231646", "0", "read"));
 	        connection.close();
 	          
 	        
