@@ -3,8 +3,9 @@ package abacCore;
 import java.util.HashMap;
 import java.util.Map;
 
+import co.junwei.cpabe.Common;
+
 public class Test {
-	
 		
 	public static void main(String[] args) {
 		
@@ -27,15 +28,21 @@ public class Test {
 			m1.put("R_W", "read");
 			m1.put("OBJECT", "261640");
 			
+			Map<String, String> m2 = new HashMap<>();
+			m2.put("docname", "omar");
+			m2.put("docSpeciality", "cardiologe");
+			
 //			core.removePolicy(m);
 //			core.removePolicy(m1);
 			
-			core.addPolicy(m);
-			core.addPolicy(m1);
-			System.out.println(core.getActiveRules());
+//			core.addPolicy(m);
+//			core.addPolicy(m1);
+//			System.out.println(core.getActiveRules());
 			
 	        //System.out.println("==>" + Permission(doc.getDocumentElement(), connection, "231649", "261640", "read"));
 	        
+			core.addEHR(Common.suckFile("Resource/input.txt"), m2);
+			Common.spitFile("Resource/out.txt", core.getEHR("Resource/1", "a:aa b:b c:c d:dd"));
 	          
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

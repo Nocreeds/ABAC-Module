@@ -172,7 +172,7 @@ public class DOMUtils {
 		public static Node creatXMLNode(Map<String, String> input) throws Exception {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
-			Document doc = builder.parse(new File("Models.xml"));
+			Document doc = builder.parse(new File("Resource/Models.xml"));
 			trimEmptyTextNodes(doc);
 			NodeList nodes = doc.getElementsByTagName(input.get("MODEL"));
 			if(nodes.getLength() > 1) throw new Exception("redundancy detected in Model: "+input.get("MODEL"));

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Model>
+	<TimeRes>
+		<and type="Permit">
+			<equal>
+				<att>utilisateurs.ID</att>
+				<val>IDLOCATION</val>
+			</equal>
+			<subequal>
+				<att>system.time</att>
+				<val>STIME</val>
+			</subequal>
+			<infequal>
+				<att>.datetime('now')</att>
+				<val>ETIME</val>
+			</infequal>
+		</and>
+	</TimeRes>
+	<Lock>
+		<and type="deny">
+			<equal>
+				<att>utilisateurs.role</att>
+				<val>USERROLE</val>
+			</equal>
+		</and>
+	</Lock>
+</Model>
+
+
+
+

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<policy>
+<camera>
+<read>
+<and>
+<or>
+<and>
+<equal>
+<att>utilisateurs.role</att>
+<val>doctor</val>
+</equal>
+<supequal>
+<att>system.alert.1</att>
+<val>1</val>
+</supequal>
+</and>
+<and type="Permit">
+<equal>
+<att>utilisateurs.ID</att>
+<val>231649</val>
+</equal>
+<subequal>
+<att>system.time</att>
+<val>2000-01-01 12:12:12</val>
+</subequal>
+<infequal>
+<att>.datetime('now')</att>
+<val>2001-01-01 12:12:12</val>
+</infequal>
+</and>
+</or>
+<and type="deny">
+<equal>
+<att>utilisateurs.role</att>
+<val>owner</val>
+</equal>
+</and>
+</and>
+</read>
+</camera>
+</policy>

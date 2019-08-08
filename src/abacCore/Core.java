@@ -20,10 +20,15 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import co.junwei.cpabe.Cpabe;
+
 public class Core {
 	private ArrayList<Map <String, String>> activeRules = new ArrayList<>();
 	private Document mainDoc;
 	private Connection connection = null;
+	private String pubfile = "Resource/pub_key";
+	private String mskfile = "Resource/master_key";
+	private Cpabe cpabe = null;
 	
 	public ArrayList<Map<String, String>> getActiveRules() {
 		return activeRules;
@@ -34,7 +39,7 @@ public class Core {
 		connection = DriverManager.getConnection("jdbc:sqlite:HomeSecurityDB.db");
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = factory.newDocumentBuilder();
-		mainDoc = builder.parse(new File("Policies.xml"));
+		mainDoc = builder.parse(new File("Resource/Policies.xml"));
 		DOMUtils.trimEmptyTextNodes(mainDoc);
 		/****************load policy models***************/
 		Statement stat = connection.createStatement();
@@ -42,6 +47,7 @@ public class Core {
 		while (res.next()) {
 			activeRules.add(warppStringToMap(res.getString("map")));
 		}stat.close();
+		cpabe = new Cpabe();
 	}
 	
 	public String getObjectType(String IDObject) throws Exception {
@@ -356,5 +362,29 @@ public class Core {
 		} catch (SQLException e) {
 			throw new Exception("Error user "+IDUser+" or object "+IDObject+" not fund");
 		}return false;
+	}
+	
+	//the map => {(docname, type)}
+	public void addEHR(byte [] file, Map<String, String> m) throws Exception {
+		Statement s = connection.createStatement();
+		//check that the doctor specialty exist
+		ResultSet res = s.executeQuery("SELECT count(*) FROM abepolicy WHERE type = \""
+				+m.get("docSpeciality")+"\"");
+		if(res.getInt(1) != 1) throw new Exception("invalid doctor speciality");
+		//add the new EHR
+		s.executeUpdate("INSERT INTO ehr(\"docName\",\"docSpeciality\") VALUES (\""
+				+m.get("docname")+"\" , \""+m.get("docSpeciality")+"\")");
+		res = s.executeQuery("SELECT last_insert_rowid()");
+		String name = "Resource/"+res.getString(1);
+		//Crypte and save the file
+		res = s.executeQuery("SELECT policy FROM abepolicy WHERE type = \""+m.get("docSpeciality")+"\"");
+		cpabe.enc(pubfile, res.getString(1), file, name);
+		
+	}
+	
+	public byte[] getEHR(String encfile, String att) throws Exception {
+		// add system attribute to att before creating a key
+		byte[] privetKey = cpabe.keygen(pubfile, mskfile, att);
+		return cpabe.dec(pubfile, privetKey, encfile);
 	}
 }
