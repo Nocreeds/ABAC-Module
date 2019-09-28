@@ -1,27 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Model>
 	<TimeRes>
-		<and type="Permit">
-			<equal>
-				<att>utilisateurs.ID</att>
-				<val>IDLOCATION</val>
-			</equal>
-			<subequal>
-				<att>system.time</att>
-				<val>STIME</val>
-			</subequal>
-			<infequal>
-				<att>.datetime('now')</att>
-				<val>ETIME</val>
-			</infequal>
+		<and type="deny">
+			<or>
+				<equal>
+					<att>system.alert.1</att>
+					<val>3</val>
+				</equal>
+				<notequal>
+					<att>utilisateurs.ID</att>
+					<val>IDLOCATION</val>
+				</notequal>
+				<infequal>
+					<att>datetime('now')</att>
+					<val>STIME</val>
+				</infequal>
+				<supequal>
+					<att>datetime('now')</att>
+					<val>ETIME</val>
+				</supequal>
+			</or>
 		</and>
 	</TimeRes>
-	<Lock>
+	<TimeResAll>
 		<and type="deny">
-			<equal>
-				<att>utilisateurs.role</att>
-				<val>USERROLE</val>
-			</equal>
+			<or>
+				<equal>
+					<att>utilisateurs.ID</att>
+					<val>owner</val>
+				</equal>
+				<equal>
+					<att>system.alert.1</att>
+					<val>3</val>
+				</equal>
+				<infequal>
+					<att>datetime('now')</att>
+					<val>STIME</val>
+				</infequal>
+				<supequal>
+					<att>datetime('now')</att>
+					<val>ETIME</val>
+				</supequal>
+			</or>
+		</and>
+	</TimeResAll>
+	<Lock>
+		<and type="permit">
+			<or>
+				<supequal>
+					<att>system.alert.1</att>
+					<val>2</val>
+				</supequal>
+				<equal>
+					<att>utilisateurs.role</att>
+					<val>owner</val>
+				</equal>
+			</or>
 		</and>
 	</Lock>
 </Model>

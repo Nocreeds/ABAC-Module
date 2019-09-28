@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Alarm>
+	<l3>
+		<or>
+			<equal>
+				<att>heart.state.281640</att>
+				<val>0</val>
+			</equal>
+		</or>
+	</l3>
+	<l2>
+		<or>
+			<infequal>
+				<att>heart.state.281640</att>
+				<val>50</val>
+			</infequal>
+			<supequal>
+				<att>heart.state.281640</att>
+				<val>170</val>
+			</supequal>
+		</or>
+	</l2>
+	<l1>
+		<or>
+			<infequal>
+				<att>firesensor.temp.251640</att>
+				<val>5</val>
+			</infequal>
+			<supequal>
+				<att>firesensor.temp.251640</att>
+				<val>45</val>
+			</supequal>
+		</or>
+	</l1>
+</Alarm>
